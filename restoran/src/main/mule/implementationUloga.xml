@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="getUloga" doc:id="84d528af-f3c6-4c4d-880c-5e3fb86aec22" >
+		<db:select doc:name="Select" doc:id="03b6f6c3-36a7-4111-9b47-dadfb41dcc12" config-ref="Database_Config">
+			<db:sql >select * from erp.uloga</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="7df90fde-f966-478d-a614-9dedc84c2e93" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c0be75a1-6625-41c7-9860-7fb73a4c9ad8" />
+	</flow>
+	<flow name="getUlogaByID" doc:id="efa6d4ba-5d5d-47d6-9fda-c84c0a38015d" >
+		<db:select doc:name="Select" doc:id="fa291f5c-3954-457b-9b5d-4a995fd4388c" config-ref="Database_Config">
+			<db:sql >SELECT * FROM uloga WHERE idUloge = :idUloge</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idUloge': attributes.uriParams.idUloge}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="73719919-692a-464a-a12b-2e46d0eb8f79" message='#["Uloga nije pronadjena"]'>
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<ee:transform doc:name="Transform Message" doc:id="df7b2b9e-9b6a-4bb1-9585-167f1b4a125e" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="a21072c4-2de2-49aa-8d85-43d68fb00864" />
+	</flow>
+	<flow name="deleteUloga" doc:id="0bc61096-8a5e-46ff-82ea-82c1b7d5d9c4" >
+		<set-variable value="#[attributes.uriParams.idUloge]" doc:name="idUloge" doc:id="82a447f4-0a92-42bf-b5ca-033ae28c4740" variableName="idUloge" />
+		<set-variable value="#[payload]" doc:name="body" doc:id="2adde921-2650-40af-8dbd-07fef35f74a4" variableName="body" />
+		<flow-ref doc:name="Flow Reference" doc:id="c3a57c90-98be-4959-a3f0-9557ebd75704" name="getUlogaByID" />
+		<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="0ee08703-42d4-4ae3-a2c9-436aaf8abbb5" />
+		<db:delete doc:name="Delete" doc:id="9b0813f9-6a4a-4bf4-a7c4-1341b1afe26a" config-ref="Database_Config" >
+			<db:sql >DELETE FROM uloga  WHERE idUloge = :idUloge</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idUloge' : vars.idUloge}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="0d49603d-4f08-4ef5-be0e-a6ffb2574b9b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Uloga je obrisana"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="postUloga" doc:id="3719474f-4c59-4ae3-b4fa-9643eb9e4b30" >
+		<db:insert doc:name="Insert" doc:id="7cf61eb1-576b-4bf4-9e40-c2ae07738198" config-ref="Database_Config" >
+			<db:sql >INSERT INTO uloga ( nazivUloge)
+VALUES ( :nazivUloge)</db:sql>
+			<db:input-parameters ><![CDATA[#[{'nazivUloge' : payload.nazivUloge }]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Copy_of_Transform Message" doc:id="d98f70d2-5bc7-4de6-a8c7-479cedfe49a6" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Uloga je dodata"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="putUloga" doc:id="366e63c0-0dc3-49b8-9500-adef42cf875c" >
+		<set-variable value="#[payload]" doc:name="body" doc:id="614f0016-7d54-49ee-9a52-9487c98a3cad" variableName="body" />
+		<set-variable value="#[message.attributes.uriParams.idUloge]" doc:name="idUloge" doc:id="33185455-d77f-42f3-b741-74069442d403" variableName="personNumber" />
+		<db:select doc:name="Select" doc:id="a05d30e7-5a82-4917-be53-3a8f9844683c" config-ref="Database_Config" queryTimeoutUnit="MILLISECONDS" >
+			<db:sql >SELECT * FROM uloga WHERE idUloge = :idUloge</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idUloge': attributes.uriParams.idUloge}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="82bdcf5d-776f-4e2f-a628-2a21e023942d" >
+			<when expression="#[sizeOf(payload) == 0]" >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="a9315ea3-4f62-4e1c-8cec-2bdce9f77500" />
+				<flow-ref doc:name="Flow Reference" doc:id="f7717b96-c7f1-4a1f-8c7d-be9b0c9df4e6" name="postUloga" />
+				<ee:transform doc:name="Transform Message" doc:id="b485ce4a-407f-47bd-a327-2b97dc44d743" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="ad81c6c5-fa1b-44f9-a500-a76014b53494" />
+				<db:update doc:name="Update" doc:id="6bf7c98a-27b2-4cfd-88d0-1ccb4e09ba79" config-ref="Database_Config" >
+					<db:sql >UPDATE uloga
+SET nazivUloge = :nazivUloge
+where idUloge =:idUloge</db:sql>
+					<db:input-parameters ><![CDATA[#[{'idUloge' : vars.idUloge, 'nazivUloge' : payload.nazivUloge }]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Transform Message" doc:id="851481b4-0717-48db-9926-00d66107e67b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Uloga je azurirana"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="74cfd402-57b6-4f20-af66-65f6ab233d31" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="getMeni" doc:id="0d5a9ad0-5e10-465c-b81a-76dba1760ba7" >
+		<db:select doc:name="Select" doc:id="6e4b34cf-29b2-47cc-8d36-fa6746fc5ec5" config-ref="Database_Config" >
+			<db:sql >select * from erp.meni</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="9285a384-fffc-407f-baa3-0a06a530e08a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="3967cc37-5b98-4079-955d-14975581fe86" />
+	</flow>
+	<flow name="getMeniByID" doc:id="e4c7b474-2cd0-4152-abbd-b6fcfc427392" >
+		<db:select doc:name="Select" doc:id="710cfbff-11c6-42ee-9ead-517d62198bf9" config-ref="Database_Config" >
+			<db:sql >SELECT * FROM meni WHERE idMenija = :idMenija</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idMenija': attributes.uriParams.idMenija}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="e28dc2cb-ffaa-460b-afe0-f6161b7c5965" message="#['Meni nije pronadjen']">
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<ee:transform doc:name="Transform Message" doc:id="6afe8bf8-b0ab-424e-a048-52e3fa25397a" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="20d3f410-f675-4df8-af38-ec17d351329f" />
+	</flow>
+	<flow name="deleteMeni" doc:id="724f233c-cafa-42fc-86dd-7d334eb73a5b" >
+		<set-variable value="#[attributes.uriParams.idMenija]" doc:name="idMenija" doc:id="7fb1fda6-761b-474b-9122-eb70e6b4baec" variableName="idMenija" />
+		<set-variable value="#[payload]" doc:name="body" doc:id="91b81a05-463a-4cdf-9cb1-4ab712363977" variableName="body" />
+		<flow-ref doc:name="Flow Reference" doc:id="83d91f5b-0f72-41a6-98a0-d197b836efa2" name="getMeniByID" />
+		<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="0493ab77-aac5-40c2-ade9-e72d90563156" />
+		<db:delete doc:name="Delete" doc:id="bb81b35d-23c7-4e8f-9b0e-46f55a94e735" config-ref="Database_Config" >
+			<db:sql >DELETE FROM meni  WHERE idMenija = :idMenija</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idMenija' : vars.idMenija}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="24ea244f-c85f-45b1-abeb-7363237f07dd" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Meni je uklonjen"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="postMeni" doc:id="cad7d501-1060-4b04-8223-044a3dbcf624">
+		<db:insert doc:name="Insert" doc:id="7d2e07ab-506e-48fe-8ee2-6d66684e91ac" config-ref="Database_Config">
+			<db:sql>INSERT INTO meni ( vaziOd, vaziDo)
+VALUES ( :vaziOd, :vaziDo)</db:sql>
+			<db:input-parameters><![CDATA[#[{'vaziOd' : payload.vaziOd, 'vaziDo' : payload.vaziDo }]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="562a85e9-b453-40b0-9a24-cc390ae9dc79">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="putMeni" doc:id="9fabb08c-5e30-4823-bbc6-8053bb48377f" >
+		<set-variable value="#[payload]" doc:name="body" doc:id="d8c195bd-2a37-4ec8-9f4d-988e61686d7c" variableName="body" />
+		<set-variable value="#[message.attributes.uriParams.idMenija]" doc:name="idMenija" doc:id="d0b1ed7b-0b63-43b1-9a37-2fa37e84d6f3" variableName="idMenija" />
+		<db:select doc:name="Select" doc:id="2e24c44c-45f5-461e-9556-9be21ee33d55" config-ref="Database_Config" queryTimeoutUnit="MILLISECONDS" >
+			<db:sql >SELECT * FROM meni WHERE idMenija = :idMenija</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idMenija': attributes.uriParams.idMenija}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="6793f3ef-5358-4415-882a-1652c4aedb15" >
+			<when expression="#[sizeOf(payload) == 0]" >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="080f56c8-20c7-4741-998f-d71bbcb30f94" />
+				<flow-ref doc:name="Flow Reference" doc:id="22ec3e2a-32d3-439c-804d-d4e53942d483" name="postMeni" />
+				<ee:transform doc:name="Transform Message" doc:id="d70e3b35-cc73-4abf-84bf-54e0c13d2281" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="5ff290a3-2c00-4362-8306-03352f4dbc07" />
+				<db:update doc:name="Update" doc:id="c7cdc164-b3ba-4a7a-8a52-b3e6cdb48068" config-ref="Database_Config" >
+					<db:sql >UPDATE meni
+SET vaziOd = :vaziOd, vaziDo = :vaziDo 
+where idMenija =:idMenija</db:sql>
+					<db:input-parameters ><![CDATA[#[{'idMenija' : vars.idMenija, 'vaziOd' : payload.vaziOd, 'vaziDo' : payload.vaziDo }]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Transform Message" doc:id="a5dc770c-8c34-48e1-9e13-69a101c973be" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="cc3778e8-6dcb-4bd7-8933-9ef12981a1ee" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

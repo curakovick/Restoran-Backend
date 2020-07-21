@@ -1,0 +1,16 @@
+#%RAML 1.0 DataType
+
+type: object
+properties: 
+  idPlacanja?: integer
+  datumIVremeUplate: datetime-only
+  ukupnaCena?: integer
+  tipPlacanja:
+    enum:
+      - Kes
+      - Kartica
+      - Cek
+  brojKartice?: string
+  datumIstekaKartice?: date-only
+  idKupca: integer
+  idPorudzbine: integer

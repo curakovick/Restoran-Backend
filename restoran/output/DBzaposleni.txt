@@ -1,0 +1,25 @@
+{
+  "imeZ": "Ime",
+  "przZ": "Prezime",
+  "telZ": "0637798855",
+  "adresaZ": "Bulevar patrijarha Pavla 1A/23",
+  "emailZ": "curakovic.katarina@gmail.com",
+  "username": "cuci9777",
+  "password": "12345",
+  "plata": 60000,
+  "zaposlenOd": "2020-03-03",
+  "radi": true,
+  "idUloge": 2
+}{
+  "imeZ": "Ime",
+  "przZ": "Prezime",
+  "telZ": "0637798855",
+  "adresaZ": "Bulevar patrijarha Pavla 1A/23",
+  "emailZ": "curakovic.katarina@gmail.com",
+  "username": "crrri9777",
+  "password": "12345",
+  "plata": 60000,
+  "zaposlenOd": "2020-03-03",
+  "radi": true,
+  "idUloge": 2
+}

@@ -1,0 +1,800 @@
+#%RAML 1.0
+baseUri: https://anypoint.mulesoft.com/mocking/api/v1/links/94a00c1f-836f-40a5-ba62-7213fa227019/ # 
+title: Restoran API
+
+types:
+  Uloga: !include /datatypes/Uloga.raml
+  Zaposleni: !include /datatypes/Zaposleni.raml
+  Meni: !include /datatypes/Meni.raml
+  StavkaMenija: !include /datatypes/StavkaMenija.raml
+  Kupac: !include /datatypes/Kupac.raml
+  Porudzbina: !include /datatypes/Porudzbina.raml
+  StavkaPorudzbine: !include /datatypes/StavkaPorudzbine.raml
+  Placanje: !include /datatypes/Placanje.raml
+  Rejting: !include /datatypes/Rejting.raml
+
+/uloga:
+  displayName:  Get uloga
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: Uloga[]
+            examples:
+              output: !include /examples/uloga/UlogeExample.raml   
+  post:
+    body: 
+      application/json:
+        type: Uloga
+        examples:
+          input: !include /examples/uloga/UlogaNoIDExample.raml
+    responses: 
+      201:
+        body: 
+          application/json:
+              example:
+                { "message" : "Uloga je dodata" } 
+      500:
+        body:
+          application/json:
+              example:
+                { "message" : "Greska na serveru" }                       
+
+  /{idUloge}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: Uloga
+              examples:
+                output: !include /examples/uloga/UlogaExample.raml
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+    put:
+      body:
+        application/json:
+          type: Uloga
+          examples:
+             input: !include /examples/uloga/UlogaNoIDExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                { "message" : "Uloga je azurirana" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+        500:
+          body:
+            application/json:
+              example:
+                { "message" : "Greska na serveru" }                  
+
+    delete:
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+               { "message" : "Uloga je obrisana" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+                                
+          
+/zaposleni:
+  displayName: Get zaposlenih
+  get:
+    headers:
+      radi:
+         type: boolean
+         required: false
+
+    responses:
+      200:
+        body:
+          application/json:
+            type: Zaposleni []
+            examples:
+              output: !include /examples/zaposleni/ZaposleniMnozinaExample.raml
+
+  post:
+    body: 
+      application/json:
+        type: Zaposleni
+        examples:
+          input: !include /examples/zaposleni/ZaposleniNoIDExample.raml
+    responses: 
+      201:
+        body: 
+          application/json:
+            example:
+              {"message" : "Zaposleni je dodat" }
+      500:
+        body:
+          application/json:
+            example:
+              { "message" : "Greska na serveru" }               
+
+  /{idZaposlenog}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: Zaposleni
+              examples:
+                output: !include /examples/zaposleni/ZaposleniExample.raml
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+    put:
+      body:
+        application/json:
+          type: Zaposleni
+          examples:
+             input: !include /examples/zaposleni/ZaposleniNoIDExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                { "message" : "Zaposleni je azuriran" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+        500:
+          body:
+            application/json:
+              example:
+                { "message" : "Greska na serveru" }       
+
+    delete:
+      responses:
+        200:
+          body:
+            application/json:
+              type: Zaposleni
+              examples:
+                output: !include /examples/zaposleni/ZaposleniExample.raml
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+                                
+
+/meni:
+  displayName: Get menija
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: Meni []
+            examples:
+              output: !include /examples/meni/MenijiExample.raml
+
+  post:
+    body: 
+      application/json:
+        type: Meni
+        examples:
+          input: !include /examples/meni/MeniNoIDExample.raml
+    responses: 
+      201:
+        body: 
+          application/json:
+            example:
+              { "message" : "Meni je dodat"}
+      500:
+        body:
+          application/json:
+            example:
+              { "message" : "Greska na serveru" }   
+
+  /{idMenija}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: Meni
+              examples:
+                output: !include /examples/meni/MeniExample.raml
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+    put:
+      body:
+        application/json:
+          type: Meni
+          examples:
+             input: !include /examples/meni/MeniNoIDExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                { "message" : "Meni je azuriran" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+        500:
+          body:
+            application/json:
+              example:
+                { "message" : "Greska na serveru" }                   
+
+    delete:
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+               { "message" : "Meni je obrisan" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+                                
+
+/stavkamenija:
+  displayName: Get stavki menija
+  get:
+    queryParameters: 
+      kuhinja:
+        required: false
+        enum: 
+        - Morska
+        - Rostilj
+        - Veganska
+        - Italijanska
+        - Kineska
+        - Fit
+        - Mediteranska
+      kategorija:
+        required: false
+        enum:
+          - Predjelo
+          - Glavno jelo
+          - Prilog
+          - Salata
+          - Dezert
+          - Koktel
+          - Kafa
+          - Bezalkoholno pice
+          - Alkoholno pice  
+    responses:
+      200:
+        body:
+          application/json:
+            type: StavkaMenija []
+            examples:
+              output: !include /examples/stavkamenija/StavkeMenijaExample.raml       
+      404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                code: 404
+                message: Not found         
+
+  post:
+    body: 
+      application/json:
+        type: StavkaMenija
+        examples:
+          input: !include /examples/stavkamenija/StavkaMenijaNoIDExample.raml
+    responses: 
+      201:
+        body: 
+          application/json:
+            example:
+              message: Stavka menija je dodata
+      500:
+        body:
+          application/json:
+            example:
+              { "message" : "Greska na serveru" }            
+
+  /{idStavkeMenija}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: StavkaMenija
+              examples:
+                output: !include /examples/stavkamenija/StavkaMenijaExample.raml
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+    put:
+      body:
+        application/json:
+          type: StavkaMenija
+          examples:
+             input: !include /examples/stavkamenija/StavkaMenijaNoIDExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                { "message" : "Stavka menija je azurirana" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+        500:
+          body:
+            application/json:
+              example:
+                { "message" : "Greska na serveru" }            
+
+    delete:
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+               { "message" : "Stavka menija je obrisana" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+                                
+
+/kupac:
+  displayName: Get kupaca
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: Kupac []
+            examples:
+              output: !include /examples/kupac/KupciExample.raml
+
+  post:
+    body:
+      application/json:
+        type: Kupac
+        examples:
+          input: !include /examples/kupac/KupacNoIDExample.raml 
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              { "message" : "Kupac je dodat"}
+      500:
+        body:
+          application/json:
+            example:
+              { "message" : "Greska na serveru" }               
+
+  /{idKupca}:
+     get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: Kupac
+              examples:
+                output: !include /examples/kupac/KupacExample.raml
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+     put:
+       body:
+        application/json:
+          type: Kupac
+          examples:
+             input: !include /examples/kupac/KupacNoIDExample.raml
+       responses:
+        200:
+          body:
+            application/json:
+              example:
+                { "message" : "Kupac je azuriran" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+        500:
+          body:
+            application/json:
+              example:
+                { "message" : "Greska na serveru" }               
+            
+
+     delete:
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+               { "message" : "Kupac je obrisan" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+                                
+          
+/porudzbina:
+  displayName: Get porudzbina
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: Porudzbina []
+            examples:
+              output: !include /examples/porudzbina/PorudzbineExample.raml
+  post:
+    body: 
+      application/json:
+        type: Porudzbina
+        examples:
+          input: !include /examples/porudzbina/PorudzbinaNoIDExample.raml
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              {" message" : "Porudzbina je dodata"}
+      500:
+        body:
+          application/json:
+            example:
+              { "message" : "Greska na serveru" }   
+
+  /{idporudzbine}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: Porudzbina 
+              examples:
+                output: !include /examples/porudzbina/PorudzbinaExample.raml
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+    put:
+      body:
+        application/json:
+          type: Porudzbina
+          examples:
+             input: !include /examples/porudzbina/PorudzbinaNoIDExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              examples:
+                {"message" : "Porudzbina je azurirana"}
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" }
+        500:
+          body:
+            application/json:
+              example:
+                { "message" : "Greska na serveru" }    
+
+    delete:
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+               { "message" : "Porudzbina je obrisana" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+                                
+
+/stavkaporudzbine:
+  displayName: Get stavki porudzbina
+  get:
+    queryParameters:
+      idstavkeMenija:
+        required: true
+      idPorudzbine:
+        required: true
+    responses:
+      200:
+        body:
+          application/json:
+            type: StavkaPorudzbine 
+            examples:
+              output: !include /examples/stavkaporudzbine/StavkaPorudzbineExample.raml
+      404:
+        description: Bad request
+        body:
+          application/json:
+            example:
+              { "message" : "Nije pronadjeno" }
+    
+  put:
+    queryParameters:
+      idstavkeMenija:
+        required: true
+      idPorudzbine:
+        required: true
+    body:
+      application/json:
+        type: StavkaPorudzbine
+        examples:
+            input: !include /examples/stavkaporudzbine/StavkaPorudzbineNoID.raml
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              { "message" : "Stavka porudzbine je azurirana" } 
+      404:
+        description: Bad request
+        body:
+          application/json:
+            example:
+              { "message" : "Nije pronadjeno" }
+
+      500:
+        body:
+          application/json:
+            example:
+              { "message" : "Greska na serveru" }  
+
+  delete:
+    queryParameters:
+      idstavkeMenija:
+        required: true
+      idPorudzbine:
+        required: true
+    responses:
+      200:
+        body:
+          application/json:
+            example:
+              { "message" : "Stavka porudzbine je obrisana" } 
+      404:
+        description: Bad request
+        body:
+          application/json:
+            example:
+              { "message" : "Nije pronadjeno" }
+
+  post:
+    body: 
+      application/json:
+        type: StavkaPorudzbine
+        examples:
+          input: !include /examples/stavkaporudzbine/StavkaPorudzbineNoID.raml
+    responses:
+      201:
+        body:
+          application/json:
+            example:
+              {" message" : "Stavka porudzbine je dodata"}
+      500:
+        body:
+          application/json:
+            example:
+              { "message" : "Greska na serveru" }                   
+
+
+/rejting:
+  displayName: Get rejtinga
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: Rejting []
+            examples:
+              output: !include /examples/rejting/RejtinziExample.raml
+
+  post:
+    body: 
+      application/json:
+        type: Rejting
+        examples:
+          input: !include /examples/rejting/RejtingNoIDExample.raml
+    responses: 
+      201:
+        body: 
+          application/json:
+            example:
+              { "message" : "Rejting je dodat"}
+      500:
+        body:
+          application/json:
+            example:
+              { "message" : "Greska na serveru" }               
+
+  /{idRejtinga}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: Rejting
+              examples:
+                output: !include /examples/rejting/RejtingExample.raml
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+    put:
+      body:
+        application/json:
+          type: Rejting
+          examples:
+             input: !include /examples/rejting/RejtingNoIDExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                { "message" : "Rejting je azuriran" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+        500:
+          body:
+            application/json:
+              example:
+                { "message" : "Greska na serveru" }              
+
+    delete:
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+               { "message" : "Rejting je obrisan" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+/placanje:
+  displayName: Get placanja
+  get:
+    responses:
+      200:
+        body:
+          application/json:
+            type: Placanje []
+            examples:
+              output: !include /examples/placanje/PlacanjaExample.raml
+
+  post:
+    body: 
+      application/json:
+        type: Placanje
+        examples:
+          input: !include /examples/placanje/PlacanjeNoIDExample.raml
+    responses: 
+      201:
+        body: 
+          application/json:
+            example:
+              { "message" : "Placanje je dodato"}
+      500:
+        body:
+          application/json:
+            example:
+              { "message" : "Greska na serveru" }               
+
+  /{idPlacanja}:
+    get:
+      responses:
+        200:
+          body:
+            application/json:
+              type: Placanje
+              examples:
+                output: !include /examples/placanje/PlacanjeExample.raml
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+    put:
+      body:
+        application/json:
+          type: Placanje
+          examples:
+             input: !include /examples/placanje/PlacanjeNoIDExample.raml
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+                { "message" : "Placanje je azurirano" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" } 
+        500:
+          body:
+            application/json:
+              example:
+                { "message" : "Greska na serveru" }              
+
+    delete:
+      responses:
+        200:
+          body:
+            application/json:
+              example:
+               { "message" : "Placanje je obrisano" } 
+        404:
+          description: Bad request
+          body:
+            application/json:
+              example:
+                { "message" : "Nije pronadjeno" }   

@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="getStavkeMenija" doc:id="598428a6-3f0e-459d-ab9f-0478dee85963">
+		<set-variable value="#[message.attributes.queryParams.'kategorija']" doc:name="kategorija" doc:id="54667411-328c-46fc-8e51-260cfcdf8f5c" variableName="kategorija" />
+		<set-variable value="#[message.attributes.queryParams.'kuhinja']" doc:name="kuhinja" doc:id="55dfb632-c39c-4bb4-92c6-4fd7e3d95cf6" variableName="kuhinja" />
+		<choice doc:name="Choice" doc:id="1fc5376f-fb85-4e08-95a8-78f186e6d25c" >
+			<when expression="#[vars.kategorija != null]">
+				<db:select doc:name="Select" doc:id="9c83c78f-f21d-4ae5-a747-1de9d80b61cd" config-ref="Database_Config">
+					<db:sql >select * from stavkamenija where kategorija =:kategorija</db:sql>
+					<db:input-parameters ><![CDATA[#['kategorija' : vars.kategorija]]]></db:input-parameters>
+				</db:select>
+				<validation:is-true doc:name="Validnost kategorije" doc:id="bc572d55-d075-4534-bf3d-7c759b5be925" expression="#[['Predjelo','Glavno jelo','Prilog','Salata','Dezert', 'Koktel', 'Kafa', 'Bezalkoholno pice', 'Alkoholno pice'] contains vars.kategorija]" message="#['Uneta kategorija nije validna']" >
+					<error-mapping sourceType="VALIDATION:INVALID_BOOLEAN" targetType="APP:INVALID_ID" />
+				</validation:is-true>
+				<ee:transform doc:name="Transform Message" doc:id="6b6119f8-1c03-4ba2-bbac-6dbc9a32c9a1" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<when expression="#[vars.kuhinja != null]">
+				<db:select doc:name="Select" doc:id="7646f45a-1cbe-4595-8c93-248b1966cbed" config-ref="Database_Config">
+					<db:sql >select * from stavkamenija where kuhinja =:kuhinja</db:sql>
+					<db:input-parameters ><![CDATA[#['kuhinja' : vars.kuhinja]]]></db:input-parameters>
+				</db:select>
+				<validation:is-true doc:name="Validnost kuhinje" doc:id="8863dc21-4d44-4019-b21f-760b94cdc715" expression="#[['Morska','Rostilj','Veganska','Italijanska','Kineska', 'Fit', 'Mediteranska'] contains vars.kuhinja]" message="#['Uneta kuhinja nije validna']" >
+					<error-mapping sourceType="VALIDATION:INVALID_BOOLEAN" targetType="APP:INVALID_ID" />
+				</validation:is-true>
+				<ee:transform doc:name="Transform Message" doc:id="cf62e785-18ed-4c90-899b-a3d336fa896c" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<db:select doc:name="Select" doc:id="60326df9-51eb-4609-925b-8c77d43c6563" config-ref="Database_Config">
+					<db:sql >select * from stavkamenija</db:sql>
+				</db:select>
+				<ee:transform doc:name="Transform Message" doc:id="c5729f0d-fa9f-4293-9d64-1aedef24a414">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="getStavkaMenijaByID" doc:id="f545bd37-c80f-42ca-af24-6e23208b3941" >
+		<db:select doc:name="Select" doc:id="9d4ba8f2-e1a0-4bed-9125-681e8a2a0d2f" config-ref="Database_Config" >
+			<db:sql >SELECT * FROM stavkamenija WHERE idStavkeMenija = :idStavkeMenija</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idStavkeMenija': attributes.uriParams.idStavkeMenija}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="8fc96a2e-1268-4be2-a49a-54fd8013cd07" message="#['Stavka menija nije pronadjena']">
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<ee:transform doc:name="Transform Message" doc:id="1e583b45-d4e9-4450-8e55-32b543fa1629" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="802cef84-f062-4809-91f7-9a1e43f3dabe" />
+	</flow>
+	<flow name="deleteStavkaMenija" doc:id="9c5fde62-cde5-4280-8b1e-548dfc56ed67" >
+		<set-variable value="#[attributes.uriParams.idStavkeMenija]" doc:name="idStavkeMenija" doc:id="2c75e12a-e685-41cc-88ec-aae30cab2f61" variableName="idStavkeMenija" />
+		<set-variable value="#[payload]" doc:name="body" doc:id="b48e29a1-2fac-4daa-a5ab-42a80eec875d" variableName="body" />
+		<flow-ref doc:name="Flow Reference" doc:id="60311094-3e4d-4ce6-95fc-11e189aa2ef3" name="getStavkaMenijaByID" />
+		<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="3abd17aa-c7ef-4614-a4ca-f5ddacba3c82" />
+		<db:delete doc:name="Delete" doc:id="5d488da0-b30f-4fb7-874e-08c759783355" config-ref="Database_Config" >
+			<db:sql >DELETE FROM stavkamenija  WHERE idStavkeMenija = :idStavkeMenija</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idStavkeMenija' : vars.idStavkeMenija}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="afa4a899-684f-44d4-aefc-34831567c7c7" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Stavka menija je obrisana"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="postStavkeMenija" doc:id="47f263aa-81f4-44e8-aae3-df589f25b0a0" >
+		<db:insert doc:name="Insert" doc:id="5721925e-ca34-4356-b0fc-ce81c2e268bf" config-ref="Database_Config" >
+			<db:sql >INSERT INTO stavkamenija ( nazivSM, opisSM, cenaSM, kalorijeSM, kuhinja, kategorija, idMenija)
+VALUES ( :nazivSM, :opisSM, :cenaSM, :kalorijeSM, :kuhinja, :kategorija, :idMenija)</db:sql>
+			<db:input-parameters ><![CDATA[#[{'nazivSM' : payload.nazivSM, 'opisSM' : payload.opisSM, 'cenaSM' : payload.cenaSM, 'kalorijeSM' : payload.kalorijeSM, 'kuhinja' : payload.kuhinja, 'kategorija' : payload.kategorija, 'idMenija' : payload.idMenija}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="b8ba2dac-446a-4e88-b463-4bea2b947682" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Stavka menija je postavjena"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="putStavkeMenija" doc:id="2fadd618-970c-4883-ad6a-ed7d430bb34e" >
+		<set-variable value="#[payload]" doc:name="body" doc:id="67b6587d-48ab-4e43-a121-f8c1c19b0b24" variableName="body" />
+		<set-variable value="#[message.attributes.uriParams.idStavkeMenija]" doc:name="idStavkeMenija" doc:id="f55b618c-4c5c-40b6-9940-51109d03118a" variableName="idStavkeMenija" />
+		<db:select doc:name="Select" doc:id="89e0ef3b-b6cc-4843-9ad6-1f47b5643576" config-ref="Database_Config" queryTimeoutUnit="MILLISECONDS" >
+			<db:sql >SELECT * FROM stavkamenija WHERE idStavkeMenija = :idStavkeMenija</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idStavkeMenija': attributes.uriParams.idStavkeMenija}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="17720843-c4d7-4c24-a7cf-0301c3a59279" >
+			<when expression="#[sizeOf(payload) == 0]" >
+				<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="7018ac2f-b36c-43c7-8ed7-17ab10a67324" message="#['Stavka menija sa tim identifikacionim brojem ne postoji']">
+					<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+				</validation:is-not-empty-collection>
+				<ee:transform doc:name="Transform Message" doc:id="33bb948c-9c58-494a-98fd-859f580fa90b" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="5afad516-bad2-4297-a6d4-9030f7ad190f" />
+				<db:update doc:name="Update" doc:id="f744e011-a878-49f6-ab93-6c1894dcc5bc" config-ref="Database_Config" >
+					<db:sql >UPDATE stavkamenija 
+SET nazivSM = :nazivSM, opisSM = :opisSM, cenaSM = :cenaSM, kalorijeSM = :kalorijeSM, kuhinja = :kuhinja, kategorija = :kategorija, idMenija = :idMenija
+where idStavkeMenija =:idStavkeMenija </db:sql>
+					<db:input-parameters ><![CDATA[#[{'idStavkeMenija' : vars.idStavkeMenija, 'nazivSM' : payload.nazivSM, 'opisSM' : payload.opisSM, 'cenaSM' : payload.cenaSM, 'kalorijeSM' : payload.kalorijeSM, 'kuhinja' : payload.kuhinja, 'kategorija' : payload.kategorija, 'idMenija' : payload.idMenija }]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Transform Message" doc:id="6af69af3-c0cb-4b8d-b3b4-c9b6a824465d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Stavka menija je azurirana"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="cecdf287-4372-4afa-aa77-cd366202da3a" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

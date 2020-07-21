@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="getPorudzbina" doc:id="4c5acee8-e2d3-47af-9ba7-1ff49b181393" >
+		<db:select doc:name="Select" doc:id="c6f839ac-a52a-4c42-86a4-4f827dd4272f" config-ref="Database_Config" >
+			<db:sql >select * from erp.porudzbina</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="1c780c06-d744-42c8-ad37-6a59f594662c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="3788aff6-e1dd-47eb-ba35-d958df3288ae" />
+	</flow>
+	<flow name="getPorudzbinaByID" doc:id="59e3c317-6ddf-4059-96b5-e246e911f2e1" >
+		<db:select doc:name="Select" doc:id="1fd226c6-8e9c-4b9a-9f19-edb347e9d179" config-ref="Database_Config" >
+			<db:sql >SELECT * FROM porudzbina WHERE idporudzbine = :idporudzbine</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idporudzbine': attributes.uriParams.idporudzbine}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="3b3c7420-695d-4130-b151-d60022e48d4d" message="#['Porudzbina nije pronadjena']">
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<ee:transform doc:name="Transform Message" doc:id="1f97c880-775a-4dd4-bc7f-e87e55af8719" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="6ede0465-2b71-4c6a-9556-1fac2f0d31d2" />
+	</flow>
+	<flow name="deletePorudzbina" doc:id="dcf16e0b-f5f3-43cd-8899-8eb49c8cfcab" >
+		<set-variable value="#[attributes.uriParams.idporudzbine]" doc:name="idporudzbine" doc:id="1fa00d53-61e6-44db-8f60-d005f92b32f4" variableName="idporudzbine" />
+		<set-variable value="#[payload]" doc:name="body" doc:id="98f1f625-d624-42e3-a97c-6317a5ca3375" variableName="body" />
+		<flow-ref doc:name="Flow Reference" doc:id="bc9d477f-7faf-4ea7-aa2b-f98cec0f25e2" name="getPorudzbinaByID" />
+		<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="cdb97688-a7fb-4f16-b687-5ac99e820c40" />
+		<db:delete doc:name="Delete" doc:id="6be10fcf-bb8d-4833-9c3c-9d15b293b763" config-ref="Database_Config" >
+			<db:sql >DELETE FROM porudzbina  WHERE idporudzbine = :idporudzbine</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idporudzbine' : vars.idporudzbine}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="bd410432-e48f-4ee4-8a2a-2020cf69134b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Porudzbina je obrisana"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="postPorudzbina" doc:id="506771e8-58d1-42b1-98d9-c50d2dba310c" >
+		<db:insert doc:name="Insert" doc:id="c37ddf3e-e5ca-45df-888d-9e92deb782d3" config-ref="Database_Config" >
+			<db:sql >INSERT INTO porudzbina (datumIVremeP, napomena, statusP, idKupca, idZaposlenog)
+VALUES (:datumIVremeP, :napomena, :statusP, :idKupca, :idZaposlenog)</db:sql>
+			<db:input-parameters ><![CDATA[#[{'datumIVremeP' : payload.datumIVremeP, 'napomena' : payload.napomena, 'statusP' : payload.statusP, 'idKupca' : payload.idKupca, 'idZaposlenog' : payload.idZaposlenog }]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="e17bb0f0-511e-4a2c-925d-d37777cadda9" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Porudzbina je dodata"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="putPorudzbina" doc:id="141e7178-2c10-48e3-a4b0-260bdba8c8bf" >
+		<set-variable value="#[payload]" doc:name="body" doc:id="f13f2f7a-d66e-47c5-836b-f79c9f795697" variableName="body" />
+		<set-variable value="#[message.attributes.uriParams.idporudzbine]" doc:name="idporudzbine" doc:id="6d979851-71d3-4b87-8f48-bd2675bdb3e5" variableName="idporudzbine" />
+		<db:select doc:name="Select" doc:id="e3c60c8a-3042-4cb5-9ab0-d2ac08a5a804" config-ref="Database_Config" queryTimeoutUnit="MILLISECONDS" >
+			<db:sql >SELECT * FROM porudzbina WHERE idporudzbine = :idporudzbine</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idporudzbine': attributes.uriParams.idporudzbine}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="74e153ad-7dc2-40a0-ac7d-b6dd1feafbcc" >
+			<when expression="#[sizeOf(payload) == 0]" >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="c8e06443-c913-4a88-98c4-41d0a876f9ae" />
+				<flow-ref doc:name="Flow Reference" doc:id="1083fc13-9fce-4514-9f44-84494bddd6d4" name="postPorudzbina" />
+				<ee:transform doc:name="Transform Message" doc:id="783da586-30fb-414b-ab20-92ef18a6b76a" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="cf30552d-7fd7-4e86-a53d-451de9029f76" />
+				<db:update doc:name="Update" doc:id="b83aa5db-0b85-47d8-bca1-e2b73933fbb2" config-ref="Database_Config" >
+					<db:sql >UPDATE porudzbina
+SET datumIVremeP = :datumIVremeP, napomena = :napomena, statusP = :statusP, idKupca = :idKupca, idZaposlenog = :idZaposlenog
+where idporudzbine =:idporudzbine</db:sql>
+					<db:input-parameters ><![CDATA[#[{'idporudzbine' : vars.idporudzbine, 'datumIVremeP' : payload.datumIVremeP, 'napomena' : payload.napomena, 'statusP' : payload.statusP, 'idKupca' : payload.idKupca, 'idZaposlenog' : payload.idZaposlenog }]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Transform Message" doc:id="06ce3314-dcd0-453f-b9b7-5879ec7c1f84" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Porudzbina je azurirana"
+} ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="a5a52ba5-8041-4871-b6b4-52f708d229e2" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

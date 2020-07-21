@@ -1,0 +1,180 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:file="http://www.mulesoft.org/schema/mule/file" xmlns:email="http://www.mulesoft.org/schema/mule/email"
+	xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/email http://www.mulesoft.org/schema/mule/email/current/mule-email.xsd
+http://www.mulesoft.org/schema/mule/file http://www.mulesoft.org/schema/mule/file/current/mule-file.xsd">
+	<flow name="getZaposleni" doc:id="b10b8c8e-d38b-4bb8-b3f7-2dc99e82b2f6">
+		<set-variable value="#[message.attributes.headers.radi]" doc:name="radi" doc:id="bd5d6854-862f-4da7-ac28-aeb9e3e2c045" variableName="radi" />
+		<choice doc:name="Choice" doc:id="6bf24cad-71bd-4763-a798-d478df7a55ca">
+			<when expression='#[vars.radi=="true"]'>
+				<db:select doc:name="Select" doc:id="5af54e9e-8be9-4dfe-a3a7-8dc15e2ee23e" config-ref="Database_Config">
+					<db:sql>select * from zaposleni where radi=true;</db:sql>
+				</db:select>
+			</when>
+			<when expression='#[vars.radi=="false"]'>
+				<db:select doc:name="Select" doc:id="d4a42687-2d7e-45de-b053-75faef2040dc" config-ref="Database_Config">
+					<db:sql>select * from zaposleni where radi=false;</db:sql>
+				</db:select>
+			</when>
+			<otherwise>
+				<db:select doc:name="Select" doc:id="47cad003-8cb1-4428-a00c-d95f4c5bdcb2" config-ref="Database_Config">
+					<db:sql>SELECT * FROM zaposleni</db:sql>
+				</db:select>
+			</otherwise>
+		</choice>
+		<ee:transform doc:name="Transform Message" doc:id="fd183c95-a521-42af-8508-8a0531efb6ce">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload 
+]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="e443100e-7b69-4240-914f-bac74a4b18fb" />
+	</flow>
+	<flow name="getZaposleniByID" doc:id="cfacb56b-2c72-4d0d-9733-29a3136d3fc4" >
+		<db:select doc:name="Select" doc:id="d2ff0552-e442-40dc-b64e-66d4b2b450a0" config-ref="Database_Config" >
+			<db:sql >SELECT * FROM zaposleni WHERE idZaposlenog = :idZaposlenog</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idZaposlenog': attributes.uriParams.idZaposlenog}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="d939f563-dc1e-4600-8341-90e270fbcc13" message='#["Zaposleni nije pronadjen"]'>
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<ee:transform doc:name="Transform Message" doc:id="9c5a4260-80f0-4af2-91e2-0910db818597" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="deleteZaposleni" doc:id="a8488351-a1f3-449f-aed6-d17ede72cebc" >
+		<set-variable value="#[attributes.uriParams.idZaposlenog]" doc:name="idZaposlenog" doc:id="f6b38833-d0a0-43de-bdbb-af4c5579fd7f" variableName="idZaposlenog" />
+		<set-variable value="#[payload]" doc:name="body" doc:id="897c82d0-b011-4780-8e56-f5037b926450" variableName="body" />
+		<flow-ref doc:name="Flow Reference" doc:id="6314e874-0953-4234-8415-5093c6df97a5" name="getZaposleniByID" />
+		<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="db4382a9-d6cc-43db-a855-6594264a59de" />
+		<db:delete doc:name="Delete" doc:id="48d0352a-5012-4dc9-a555-094b85935647" config-ref="Database_Config" >
+			<db:sql >DELETE FROM zaposleni  WHERE idZaposlenog = :idZaposlenog</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idZaposlenog' : vars.idZaposlenog}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="3fe6722e-65b3-43fc-bbd1-a77e73d55817" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+"message" : "Zaposleni je obrisan"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="postZaposleni" doc:id="f65090e3-38b0-42a6-82f9-59d2722f2b02" >
+		<set-variable value="#[payload.emailZ]" doc:name="emailZ" doc:id="60721fa6-17e3-4357-ad08-1668d37a52bb" variableName="emailZ" />
+		<set-variable value="#[message.payload]" doc:name="body" doc:id="7ad921e1-fd30-4c25-8a3f-ba0baee16599" variableName="body"/>
+		<db:insert doc:name="Insert" doc:id="7f5f5265-5d22-4130-b2f9-3790b56b7b72" config-ref="Database_Config">
+			<db:sql>INSERT INTO zaposleni ( imeZ, przZ, telZ, adresaZ, emailZ, username, password, plata, zaposlenOd, zaposlenDo, radi, idUloge)
+VALUES ( :imeZ, :przZ, :telZ, :adresaZ, :emailZ, :username, :password, :plata, :zaposlenOd, :zaposlenDo, :radi, :idUloge)</db:sql>
+			<db:input-parameters><![CDATA[#[{'imeZ' : payload.imeZ, 'przZ' : payload.przZ, 'telZ' : payload.telZ , 'adresaZ' : payload.adresaZ, 'emailZ' : vars.emailZ, 'username' : payload.username, 'password' : payload.password, 'plata' : payload.plata, 'zaposlenOd' : payload.zaposlenOd, 'zaposlenDo' : payload.zaposlenDo, 'radi' : payload.radi, 'idUloge' : payload.idUloge }]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="a7010cbf-ea83-4b4d-bee1-0987678f9ee0">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Zaposleni je dodat u bazu "
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<scatter-gather doc:name="Scatter-Gather" doc:id="bcaec89a-22ed-4e09-b3ae-4126498a8f4b" >
+			<route >
+				<email:send doc:name="Send" doc:id="9129e971-b20b-47c1-aea5-654962008a0c" config-ref="Email_SMTP" fromAddress="curakovick97@gmail.com" subject="Cestitamo na novom radnom mestu!">
+					<email:to-addresses>
+				<email:to-address value="#[vars.emailZ]" />
+			</email:to-addresses>
+			<email:cc-addresses />
+			<email:body encoding="UTF-8">
+				<email:content><![CDATA[Postovani,
+Vas nalog je uspesno kreiran!
+Dobrodosli u nas kolektiv. Zelimo Vam prijatan rad u nasem timu.
+]]></email:content>
+					</email:body>
+				</email:send>
+				<set-payload value="Uspesno poslato" doc:name="Set Payload" doc:id="3ea5e0f0-54b5-4f9c-9226-6d19814593dd" />
+			</route>
+			<route >
+				<logger level="INFO" doc:name="Logger" doc:id="6e4c3957-c5e5-4732-b525-b461117fb66b" />
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="541d08f0-7134-478e-ac6f-c85e998e567d" />
+				<ee:transform doc:name="Transform Message" doc:id="05a37d24-be01-4f72-8f99-856c5b21c8ca">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/csv
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<file:write doc:name="Write" doc:id="ac7e3888-3a70-4729-b361-0953abf44fa8" path="C:\Users\Katarina\AnypointStudio\studio-workspace\restoran\output\DBzaposleni.csv" config-ref="File_Config" mode="APPEND">
+				</file:write>
+				<logger level="INFO" doc:name="Logger" doc:id="78aacc83-9068-46c4-85b7-08aed76dfd6e" />
+			</route>
+		</scatter-gather>
+		<ee:transform doc:name="Transform Message" doc:id="41d7b4ae-aa9b-45d5-a769-c535ae01e093" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Novom zaposlenom je prosledjen mejl dobrodoslice i zapisani su njegovi podaci u fajl"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="putZaposleni" doc:id="d5de3063-28bc-4d11-9cec-87854b03c2b5" >
+		<set-variable value="#[payload]" doc:name="body" doc:id="198308a8-f534-4f87-85af-d9c43470aac5" variableName="body" />
+		<set-variable value="#[message.attributes.uriParams.idZaposlenog]" doc:name="idZaposlenog" doc:id="0f230d6e-0d7f-4ef8-ba3a-6b38c0ea2775" variableName="idZaposlenog" />
+		<db:select doc:name="Select" doc:id="4a803a1b-e4b2-46f6-ab08-be7d7ba2ff7c" config-ref="Database_Config" queryTimeoutUnit="MILLISECONDS" >
+			<db:sql >SELECT * FROM zaposleni WHERE idZaposlenog = :idZaposlenog</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idZaposlenog': attributes.uriParams.idZaposlenog}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="beac8fa3-6133-401d-b11d-d1863f8f2a2b" >
+			<when expression="#[sizeOf(payload) == 0]">
+				<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="6b78c4fe-586f-4761-b87b-b5e1eba435e0" message='#["Zaposleni nije pronadjen"]'>
+					<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+				</validation:is-not-empty-collection>
+				<ee:transform doc:name="Transform Message" doc:id="545e6914-8d13-4f75-8169-3313824d2455" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="77b71046-3721-49ab-aa20-bd4f266b011f" />
+				<db:update doc:name="Update" doc:id="6220ae98-53ae-486f-917d-6db938eef481" config-ref="Database_Config" >
+					<db:sql >UPDATE zaposleni 
+SET imeZ = :imeZ, przZ = :przZ, telZ = :telZ, adresaZ = :adresaZ, emailZ = :emailZ, username = :username, password = :password, plata = :plata, zaposlenOd = :zaposlenOd, zaposlenDo = :zaposlenDo, radi = :radi, idUloge = :idUloge
+where idZaposlenog =:idZaposlenog</db:sql>
+					<db:input-parameters ><![CDATA[#[{'idZaposlenog' : vars.idZaposlenog, 'imeZ' : payload.imeZ, 'przZ' : payload.przZ, 'telZ' : payload.telZ, 'adresaZ' : payload.adresaZ, 'emailZ' : payload.emailZ, 'username' : payload.username, 'password' : payload.password, 'plata' : payload.plata, 'zaposlenOd' : payload.zaposlenOd, 'zaposlenDo' : payload.zaposlenDo, 'radi' : payload.radi, 'idUloge' : payload.idUloge }]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Transform Message" doc:id="5ba20097-f5a8-4f0a-9af2-5f6a08733bdc" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="b0d71550-d093-4ac1-a3ef-af6764dd1d9d" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

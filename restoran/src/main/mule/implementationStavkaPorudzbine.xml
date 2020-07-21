@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="deleteStavkaPorudzbine" doc:id="1383bc6f-194c-4976-93fe-f83ae8c59461" >
+		<set-variable value="#[message.attributes.queryParams.'idstavkeMenija']" doc:name="idstavkeMenija" doc:id="9d1ba7ce-2284-420b-a0ea-bc8f7a05fc06" variableName="idstavkeMenija" />
+		<set-variable value="#[message.attributes.queryParams.'idPorudzbine']" doc:name="idPorudzbine" doc:id="732da352-9e67-497e-b966-32f4515a1940" variableName="idPorudzbine" />
+		<db:select doc:name="Select" doc:id="1efa6c4e-a16b-4fc1-8f3a-456e1308ec10" config-ref="Database_Config">
+			<db:sql>select * from stavkaporudzbine where idstavkeMenija =:idstavkeMenija and idPorudzbine =:idPorudzbine</db:sql>
+			<db:input-parameters><![CDATA[#[{ 'idstavkeMenija' : vars.idstavkeMenija, 'idPorudzbine' : vars.idPorudzbine}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="9592a13d-ab9f-44a6-be83-7acfc0b1a23e" message='#["Stavka porudzbine sa tim identifikacionim brojevima nije pronadjena"]'>
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<db:delete doc:name="Delete" doc:id="7206a479-9177-4e91-99ea-0f4c25650c9b" config-ref="Database_Config" >
+			<db:sql >DELETE FROM stavkaporudzbine  WHERE idstavkeMenija = :idstavkeMenija and idPorudzbine =:idPorudzbine</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idstavkeMenija' : vars.idstavkeMenija,'idPorudzbine' : vars.idPorudzbine}]]]></db:input-parameters>
+		</db:delete>
+		<logger level="INFO" doc:name="Logger" doc:id="90fb434c-3607-4d3e-b795-49bc539d8525" />
+		<ee:transform doc:name="Transform Message" doc:id="0a8f882d-32c6-4767-b00f-5ec61f230c3d" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Stavka porudzbine je obrisana"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="getStavkaPorudzbine" doc:id="bd38426c-7b39-40e6-a5d7-e12f555367fd" >
+		<set-variable value="#[message.attributes.queryParams.'idstavkeMenija']" doc:name="idstavkeMenija" doc:id="4cb64086-7aa5-4919-bce1-1105a59790e6" variableName="idstavkeMenija" />
+		<set-variable value="#[message.attributes.queryParams.'idPorudzbine']" doc:name="idPorudzbine" doc:id="c0d2588d-c0d1-4fa5-845b-c18be16c6a3e" variableName="idPorudzbine" />
+		<ee:transform doc:name="Transform Message" doc:id="be944d29-5a3b-4d59-8272-2007091a7991">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+		<db:select doc:name="Select" doc:id="3aeac4fb-9603-4d60-8e1e-cf9bcc465e0a" config-ref="Database_Config">
+					<db:sql>select * from stavkaporudzbine where idstavkeMenija =:idstavkeMenija and idPorudzbine =:idPorudzbine</db:sql>
+					<db:input-parameters><![CDATA[#[{ 'idstavkeMenija' : vars.idstavkeMenija, 'idPorudzbine' : vars.idPorudzbine}]]]></db:input-parameters>
+				</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="8e5c5680-46be-4673-9b42-b685afe3e746" message='#["Stavka porudzbine sa tim identifikacionim brojevima nije pronadjena"]'>
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<logger level="INFO" doc:name="Logger" doc:id="aafb8ba6-b4a5-4bdc-8443-4cb52bcb6f47" />
+		<ee:transform doc:name="Transform Message" doc:id="e660bb39-fd55-48f8-b3e1-4ff63468718a">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+	</flow>
+	<flow name="postStavkePorudzbine" doc:id="b5913659-1f3b-4322-9343-30fb38a69e24" >
+		<db:insert doc:name="Insert" doc:id="166d1741-561d-4436-acee-be7c0303eeed" config-ref="Database_Config" >
+			<db:sql >INSERT INTO stavkaporudzbine (idstavkeMenija, idPorudzbine, kolicina, preferencije)
+VALUES ( :idstavkeMenija, :idPorudzbine, :kolicina, :preferencije)</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idstavkeMenija' : payload.idstavkeMenija, 'idPorudzbine' : payload.idPorudzbine, 'kolicina' : payload.kolicina, 'preferencije' : payload.preferencije}]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Copy_of_Transform Message" doc:id="6bf06ed4-928b-436b-bb0c-31dcc5f1e3cb">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Stavka porudzbine je dodata"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="putStavkePorudzbine" doc:id="fa4e9003-8609-44d1-93aa-229d116073a8" >
+		<set-variable value="#[payload]" doc:name="body" doc:id="f7ef48ef-8bf2-4a29-b0df-d063eb922bff" variableName="body" />
+		<set-variable value="#[message.attributes.queryParams.'idstavkeMenija']" doc:name="idstavkeMenija" doc:id="8d31cdd6-4bd1-465b-bc84-52ef2a837859" variableName="idstavkeMenija" />
+		<set-variable value="#[message.attributes.queryParams.'idPorudzbine']" doc:name="idPorudzbine" doc:id="f07c42e1-cd70-445e-8594-6f6da7b3ce1e" variableName="idPorudzbine"/>
+		<db:select doc:name="Select" doc:id="3dab00be-6992-406c-8d53-b9da5a4068a2" config-ref="Database_Config" queryTimeoutUnit="MILLISECONDS" >
+			<db:sql >SELECT * FROM stavkaporudzbine WHERE idstavkeMenija = :idstavkeMenija and idPorudzbine = :idPorudzbine</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idstavkeMenija': vars.idstavkeMenija, 'idPorudzbine' : vars.idPorudzbine}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="8eb9cf25-53cc-4033-83ad-7640c21be6eb" >
+			<when expression="#[sizeOf(payload) == 0]" >
+				<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="908bd543-5d39-4e2a-9710-df6ac9067448" message='#["Stavka porudzbine sa ovim identifikacionim brojevima nije pronadjena"]'>
+					<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+				</validation:is-not-empty-collection>
+				<ee:transform doc:name="Copy_of_Transform Message" doc:id="ec7502da-fe8d-4087-b8cd-375e2936d22b">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="be29e973-6e7f-4cff-98e3-254923480c9e" />
+				<db:update doc:name="Update" doc:id="b8395030-7ad6-4325-8e59-af70a5bda43e" config-ref="Database_Config" >
+					<db:sql >UPDATE stavkaporudzbine
+SET kolicina = :kolicina, preferencije = :preferencije
+where idstavkeMenija =:idstavkeMenija and idPorudzbine = :idPorudzbine</db:sql>
+					<db:input-parameters ><![CDATA[#[{'idstavkeMenija' : vars.idstavkeMenija, 'idPorudzbine' : vars.idPorudzbine, 'kolicina' : payload.kolicina, 'preferencije' : payload.preferencije }]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Copy_of_Transform Message" doc:id="731f76c3-31b2-4671-b83e-d4e68a80cb71">
+					<ee:message>
+						<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Stavka porudzbine je azurirana"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Copy_of_Logger" doc:id="3dd1fa1f-612c-4b4d-954e-6cea066e1552" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="getRejting" doc:id="e5fd55c0-6a5a-4316-a11f-09943caf15f7" >
+		<db:select doc:name="Select" doc:id="2916f694-e580-4395-ae94-1dfcb119f554" config-ref="Database_Config" >
+			<db:sql >select * from erp.rejting</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="c9be6c82-91ca-4dac-89da-6adbe7438acb" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="c4955f67-5089-4314-b41f-446a96851549" />
+	</flow>
+	<flow name="getRejtingByID" doc:id="b7f58361-7429-49b7-b01d-586c758ad047" >
+		<db:select doc:name="Select" doc:id="c7bf2d53-4516-42fd-bd57-a1f5d17cd95b" config-ref="Database_Config" >
+			<db:sql >SELECT * FROM rejting WHERE idRejtinga = :idRejtinga</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idRejtinga': attributes.uriParams.idRejtinga}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="8b3b60d4-9642-415b-b660-6ba20bdd487b" message="#['Rejting nije pronadjen']">
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<ee:transform doc:name="Transform Message" doc:id="aa8c0201-dddd-46d4-973d-5251821233a0" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="45ed8f2d-4756-461a-94d6-55ee054d78d9" />
+	</flow>
+	<flow name="deleteRejting" doc:id="bfd4fb6b-4f60-491d-8b6c-d60eafaeeb11" >
+		<set-variable value="#[attributes.uriParams.idRejtinga]" doc:name="idRejtinga" doc:id="9f8bb644-a1b7-46ff-9e6f-46513a553484" variableName="idRejtinga" />
+		<set-variable value="#[payload]" doc:name="body" doc:id="c68ef846-300f-402f-b8b7-9aef4063806a" variableName="body" />
+		<flow-ref doc:name="Flow Reference" doc:id="677bf22a-7fdf-4845-84d0-f9815adc5934" name="getRejtingByID" />
+		<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="cf4b3988-02eb-4299-9ff1-111aa695037f" />
+		<db:delete doc:name="Delete" doc:id="29dd515a-2afa-4606-ad4c-9c2addb026dc" config-ref="Database_Config" >
+			<db:sql >DELETE FROM rejting  WHERE idRejtinga = :idRejtinga</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idRejtinga' : vars.idRejtinga}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="8c28c766-032d-4ade-9357-7bc8253764c5" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Rejting je obrisan"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="putRejting" doc:id="61dabac2-63ab-480c-bfb1-98900d63356c" >
+		<set-variable value="#[payload]" doc:name="body" doc:id="e7c64a3c-4cff-4428-a446-85850d663807" variableName="body" />
+		<set-variable value="#[message.attributes.uriParams.idRejtinga]" doc:name="idRejtinga" doc:id="dd3ba024-eef0-4944-9472-e15da1c2e51e" variableName="idRejtinga" />
+		<db:select doc:name="Select" doc:id="bd638bde-bd4c-4abd-b2c2-818fbcf6bc00" config-ref="Database_Config" queryTimeoutUnit="MILLISECONDS" >
+			<db:sql >SELECT * FROM rejting WHERE idRejtinga = :idRejtinga</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idRejtinga': attributes.uriParams.idRejtinga}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="473d0b0b-08ff-4380-a3fd-cade0475ae8e" >
+			<when expression="#[sizeOf(payload) == 0]" >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="62f9fb70-26ae-43ae-8ad0-31f122fb25de" />
+				<flow-ref doc:name="Flow Reference" doc:id="addbdb6d-a674-486a-8d38-65a2af075c86" name="postRejting" />
+				<ee:transform doc:name="Transform Message" doc:id="5c4d204c-b95f-488e-a6d0-1b7766cfa1de" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="5e3abc7a-03c5-45de-947b-117cd089c0bc" />
+				<db:update doc:name="Update" doc:id="a4649fd1-f79e-420f-9347-c0d5c4bbb107" config-ref="Database_Config" >
+					<db:sql >UPDATE rejting
+SET vremeIDatumR = :vremeIDatumR, naslov = :naslov, recenzija = :recenzija, brZvezdica = :brZvezdica, idporudzbine = :idporudzbine
+where idporudzbine =:idporudzbine</db:sql>
+					<db:input-parameters ><![CDATA[#[{'idRejtinga' : vars.idRejtinga, 'vremeIDatumR' : payload.vremeIDatumR, 'naslov' : payload.naslov, 'recenzija' : payload.recenzija, 'brZvezdica' : payload.brZvezdica, 'idporudzbine' : payload.idporudzbine }]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Transform Message" doc:id="1bc43228-5665-43ba-af51-ddf13b4e4353" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Rejting je azuriran"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="acf6ab01-6750-4c6f-ace9-16266e7fd2d7" />
+			</otherwise>
+		</choice>
+	</flow>
+	<flow name="postRejting" doc:id="640e5779-dcd1-4e99-985b-2053bee933b5" >
+		<db:insert doc:name="Insert" doc:id="c2ed30e2-a4e8-4a77-bffd-6f6b80d19beb" config-ref="Database_Config" >
+			<db:sql >INSERT INTO rejting (vremeIDatumR, naslov, recenzija, brZvezdica, idporudzbine)
+VALUES ( :vremeIDatumR, :naslov, :recenzija, :brZvezdica, :idporudzbine)</db:sql>
+			<db:input-parameters ><![CDATA[#[{'vremeIDatumR' : payload.vremeIDatumR, 'naslov' : payload.naslov, 'recenzija' : payload.recenzija, 'brZvezdica' : payload.brZvezdica, 'idporudzbine' : payload.idporudzbine }]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="445aedeb-d6c0-41bc-b7a3-6606d62d07c4" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Rejting je dodat"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+</mule>

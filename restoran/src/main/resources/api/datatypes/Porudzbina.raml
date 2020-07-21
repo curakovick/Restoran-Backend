@@ -1,0 +1,16 @@
+#%RAML 1.0 DataType
+
+type: object
+properties: 
+  idporudzbine?: integer
+  datumIVremeP: datetime-only
+  napomena?: string
+  statusP: 
+   enum:
+      - Obrada
+      - Prihvaceno
+      - Odbijeno
+      - Isporuceno
+      - Isplaceno
+  idKupca: integer
+  idZaposlenog: integer

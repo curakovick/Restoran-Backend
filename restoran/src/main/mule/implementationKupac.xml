@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:validation="http://www.mulesoft.org/schema/mule/validation"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd">
+	<flow name="getKupac" doc:id="893def6f-fbec-407e-882b-a77f1b758d2d" >
+		<db:select doc:name="Select" doc:id="64413def-b602-49d7-a248-e9953611f1c3" config-ref="Database_Config" >
+			<db:sql >select * from erp.kupac</db:sql>
+		</db:select>
+		<ee:transform doc:name="Transform Message" doc:id="dfbe1459-8f82-4ad7-bc34-c415881e5f1c" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="7d86bf4b-1f0e-4d70-bae8-fc2a9b2fe0ac" />
+	</flow>
+	<flow name="getKupacByID" doc:id="44cc384b-fcba-4888-8310-85d9ae49d7be" >
+		<db:select doc:name="Select" doc:id="295ff601-16c6-4bdc-ad20-bdd64040ea5d" config-ref="Database_Config" >
+			<db:sql >SELECT * FROM kupac WHERE idKupca = :idKupca</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idKupca': attributes.uriParams.idKupca}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="90f57084-840c-4972-944e-5c91e38e7aa8" message="#['Kupac nije pronadjen']">
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<ee:transform doc:name="Transform Message" doc:id="654ad87a-090c-44ac-ac59-b8b579b96953" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d90698dd-28fa-4d09-a8bd-e32e2d5cba90" />
+	</flow>
+	<flow name="deleteKupac" doc:id="9b75ddbe-5b67-4c9c-82fa-2956b0c5e42e" >
+		<set-variable value="#[attributes.uriParams.idKupca]" doc:name="idKupca" doc:id="53b435b9-ec26-46eb-a14d-1dda729f5227" variableName="idKupca" />
+		<set-variable value="#[payload]" doc:name="body" doc:id="9fae3b32-ce3c-42a6-beb1-ad6d8d16d76d" variableName="body" />
+		<flow-ref doc:name="Flow Reference" doc:id="4263a57f-677c-4510-a0b6-8c87b71ff72e" name="getKupacByID" />
+		<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="fb4d46fa-415d-4ebe-8739-d249d8630012" />
+		<db:delete doc:name="Delete" doc:id="4d733a29-5ec5-4a5c-8111-bffc82a09b60" config-ref="Database_Config" >
+			<db:sql >DELETE FROM kupac  WHERE idKupca = :idKupca</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idKupca' : vars.idKupca}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="b07a4775-d505-40eb-bb91-35de804704e3" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="postKupac" doc:id="1dddf118-9542-40b2-b595-3d6e7d12c9a0" >
+		<db:insert doc:name="Insert" doc:id="e58cb031-aea6-44be-bb4a-0b2346d3f866" config-ref="Database_Config" >
+			<db:sql >INSERT INTO kupac ( imeK, przK, telK, adresaK,  usernameK, passwordK)
+VALUES ( :imeK, :przK, :telK, :adresaK, :usernameK, :passwordK)</db:sql>
+			<db:input-parameters ><![CDATA[#[{'imeK' : payload.imeK, 'przK' : payload.przK, 'telK' : payload.telK , 'adresaK' : payload.adresaK, 'usernameK' : payload.usernameK, 'passwordK' : payload.passwordK }]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="35b2e408-902d-4bf2-a75e-00accd8cd74b" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="putKupac" doc:id="2447fb7b-13fc-4f2e-91bf-16457fa7088b" >
+		<set-variable value="#[payload]" doc:name="body" doc:id="0e9af300-51e4-4074-b0f0-0a82aba8dfbf" variableName="body" />
+		<set-variable value="#[message.attributes.uriParams.idKupca]" doc:name="idKupca" doc:id="3200640d-55a9-4017-9882-444d31a8821e" variableName="idKupca" />
+		<db:select doc:name="Select" doc:id="8cb7c530-2931-4d99-80fb-3dbb38f8c002" config-ref="Database_Config" queryTimeoutUnit="MILLISECONDS" >
+			<db:sql >SELECT * FROM kupac WHERE idKupca = :idKupca</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idKupca': attributes.uriParams.idKupca}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="306d300f-8a1e-4f38-ad3e-4bcef979851d" >
+			<when expression="#[sizeOf(payload) == 0]">
+				<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="97aa9cc3-8650-4df0-8e70-63f01b0d61f8" message='#["Kupac nije pronadjen"]'>
+					<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+				</validation:is-not-empty-collection>
+				<ee:transform doc:name="Transform Message" doc:id="fb45071c-a602-410a-bfd4-e7ef852c610f" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="7c890311-2533-4683-8f2b-c2659df09dc6" />
+				<db:update doc:name="Update" doc:id="4b570fe0-f991-4cf0-9f0e-38bcd3f29341" config-ref="Database_Config" >
+					<db:sql >UPDATE kupac
+SET imeK = :imeK, przK = :przK, telK = :telK, adresaK = :adresaK, usernameK = :usernameK, passwordK = :passwordK
+where idKupca =:idKupca</db:sql>
+					<db:input-parameters ><![CDATA[#[{'idKupca' : vars.idKupca, 'imeK' : payload.imeK, 'przK' : payload.przK, 'telK' : payload.telK, 'adresaK' : payload.adresaK, 'usernameK' : payload.usernameK, 'passwordK' : payload.passwordK }]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Transform Message" doc:id="205ac3bf-1079-41ce-bc0d-5b58a82fe06d" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="a70454be-f1d7-470c-a2be-b1c4c14feb90" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>

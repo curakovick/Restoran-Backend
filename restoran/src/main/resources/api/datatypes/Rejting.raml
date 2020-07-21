@@ -1,0 +1,16 @@
+#%RAML 1.0 DataType
+
+type: object
+properties: 
+  idRejtinga?: integer
+  vremeIDatumR: datetime-only
+  naslov: string
+  recenzija: string
+  brZvezdica: 
+   enum:
+      - '1'
+      - '2'
+      - '3'
+      - '4'
+      - '5'
+  idporudzbine: integer   

@@ -1,0 +1,310 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mule xmlns:os="http://www.mulesoft.org/schema/mule/os" xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xmlns:db="http://www.mulesoft.org/schema/mule/db" xmlns:spring="http://www.mulesoft.org/schema/mule/spring" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:apikit="http://www.mulesoft.org/schema/mule/mule-apikit" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd http://www.mulesoft.org/schema/mule/mule-apikit http://www.mulesoft.org/schema/mule/mule-apikit/current/mule-apikit.xsd 
+http://www.mulesoft.org/schema/mule/spring http://www.mulesoft.org/schema/mule/spring/current/mule-spring.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+    <apikit:config name="restoran-api-2-config" api="restoran-api.raml" outboundHeadersMapName="outboundHeaders" httpStatusVarName="httpStatus" />
+    <flow name="restoran-api-2-main">
+        <http:listener path="/api/*" config-ref="HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+		<apikit:router config-ref="restoran-api-2-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:BAD_REQUEST">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Bad request"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">400</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:METHOD_NOT_ALLOWED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Method not allowed"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">405</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_ACCEPTABLE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not acceptable"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">406</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:UNSUPPORTED_MEDIA_TYPE">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Unsupported media type"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">415</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+            <on-error-propagate type="APIKIT:NOT_IMPLEMENTED">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Not Implemented"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">501</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="restoran-api-2-console">
+        <http:listener path="/console/*" config-ref="HTTP_Listener_config">
+            <http:response statusCode="#[vars.httpStatus default 200]">
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:response>
+            <http:error-response statusCode="#[vars.httpStatus default 500]">
+                <http:body><![CDATA[#[payload]]]></http:body>
+                <http:headers><![CDATA[#[vars.outboundHeaders default {}]]]></http:headers>
+            </http:error-response>
+        </http:listener>
+        <apikit:console config-ref="restoran-api-2-config" />
+        <error-handler>
+            <on-error-propagate type="APIKIT:NOT_FOUND">
+                <ee:transform xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd">
+                    <ee:message>
+                        <ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{message: "Resource not found"}]]></ee:set-payload>
+                    </ee:message>
+                    <ee:variables>
+                        <ee:set-variable variableName="httpStatus">404</ee:set-variable>
+                    </ee:variables>
+                </ee:transform>
+            </on-error-propagate>
+        </error-handler>
+    </flow>
+    <flow name="put:\kupac\(idKupca):application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="266c7f69-e8f4-4de2-a6bc-85c9625dfe8b" name="putKupac" />
+    </flow>
+    <flow name="put:\meni\(idMenija):application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="623efec3-c283-408d-9ed6-4d35dbd9252d" name="putMeni" />
+    </flow>
+    <flow name="put:\placanje\(idPlacanja):application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="fa9aa05d-fc27-4797-b5b7-fb5c70a37556" name="putPlacanje" />
+    </flow>
+    <flow name="put:\rejting\(idRejtinga):application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="b88bc0d0-b1ce-4289-8d5c-0fd75be42632" name="putRejting" />
+    </flow>
+    <flow name="put:\stavkamenija\(idStavkeMenija):application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="12aa34c6-8f3c-4b2d-b3d1-bbed10e58114" name="putStavkeMenija" />
+    </flow>
+    <flow name="put:\uloga\(idUloge):application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="c2647de0-dc12-4fe2-81dd-5d122c2eef0a" name="putUloga" />
+    </flow>
+    <flow name="put:\zaposleni\(idZaposlenog):application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="e1e0e406-68d5-41f7-bc84-0a6cdb74ed7a" name="putZaposleni" />
+    </flow>
+    <flow name="put:\porudzbina\(idporudzbine):application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="dc64c7a2-250e-4c73-9c3a-a607776df181" name="putPorudzbina" />
+    </flow>
+    <flow name="put:\stavkaporudzbine:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="1f8db3f8-aa48-4659-829d-27dfe4a94c6f" name="putStavkePorudzbine" />
+    </flow>
+    <flow name="delete:\kupac\(idKupca):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="e1080824-265b-4919-af4c-fd9e3fa73e67" name="deleteKupac" />
+    </flow>
+    <flow name="delete:\meni\(idMenija):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="4041469e-56c8-4354-83b2-54f988adb66e" name="deleteMeni" />
+    </flow>
+    <flow name="delete:\placanje\(idPlacanja):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="273db9b3-da14-4d1f-826a-f88e525cca38" name="deletePlacanje" />
+    </flow>
+    <flow name="delete:\rejting\(idRejtinga):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="04ee1d47-dc7c-404e-a690-32942016682d" name="deleteRejting" />
+    </flow>
+    <flow name="delete:\stavkamenija\(idStavkeMenija):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="c1691484-ed65-4c5d-9e00-096488a385d2" name="deleteStavkaMenija" />
+    </flow>
+    <flow name="delete:\uloga\(idUloge):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="44a7b6ba-c205-483b-b5d1-f86ce7d2e9a7" name="deleteUloga" />
+    </flow>
+    <flow name="delete:\zaposleni\(idZaposlenog):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="43010fce-6239-4274-816d-334df5013d29" name="deleteZaposleni" />
+    </flow>
+    <flow name="delete:\porudzbina\(idporudzbine):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="dcd1b28f-2dcb-43e0-9244-d238bb7cf250" name="deletePorudzbina" />
+    </flow>
+    <flow name="delete:\stavkaporudzbine:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="76bc12f4-ab94-4a10-af3a-dfd62983b814" name="deleteStavkaPorudzbine" />
+    </flow>
+    <flow name="get:\kupac\(idKupca):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="91bd2bfe-ba49-40e0-a398-f85a7c37bbef" name="getKupacByID" />
+    </flow>
+    <flow name="get:\meni\(idMenija):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="091f5206-f48a-498b-bbae-c2e05732a87e" name="getMeniByID" />
+    </flow>
+    <flow name="get:\placanje\(idPlacanja):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="a15b810b-47a4-483d-a37d-749e8f86d9d1" name="getPlacanjeById" />
+    </flow>
+    <flow name="get:\rejting\(idRejtinga):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="278e8848-e86f-4934-aaa4-4e1f7954f13c" name="getRejtingByID" />
+    </flow>
+    <flow name="get:\stavkamenija\(idStavkeMenija):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="651ca40b-576c-4330-a186-e423219eccc6" name="getStavkaMenijaByID" />
+    </flow>
+    <flow name="get:\uloga\(idUloge):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="8271742d-4a28-4646-b199-a1f3c3700e13" name="getUlogaByID" />
+    </flow>
+    <flow name="get:\zaposleni\(idZaposlenog):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="4a2fcb16-3064-4514-9237-4221c49a5a7e" name="getZaposleniByID" />
+    </flow>
+    <flow name="get:\porudzbina\(idporudzbine):restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="554cfbeb-8243-47b2-bb39-59cc05f34371" name="getPorudzbinaByID" />
+    </flow>
+    <flow name="get:\kupac:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="8a697910-9d3b-4ef1-bd73-a405596a9344" name="getKupac" />
+    </flow>
+    <flow name="get:\meni:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="f9fcb56d-a544-4b40-8267-6cb94082f996" name="getMeni" />
+    </flow>
+    <flow name="get:\placanje:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="e84f02df-de2c-45ce-b491-a8c77c48e484" name="getPlacanje" />
+    </flow>
+    <flow name="get:\porudzbina:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="6aade731-77e0-4fc9-be26-b54c6d554f32" name="getPorudzbina" />
+    </flow>
+    <flow name="get:\rejting:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="be52ef64-8e6d-4006-bcb9-0ad49b9636bd" name="getRejting" />
+    </flow>
+    <flow name="get:\stavkamenija:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="4553eb83-18f3-4981-b1a4-5787637280f7" name="getStavkeMenija" />
+    </flow>
+    <flow name="get:\stavkaporudzbine:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="17115b77-68c3-4aa0-b40e-a5c75838cda3" name="getStavkaPorudzbine" />
+    </flow>
+    <flow name="get:\uloga:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="f2c42c6e-3ed2-42dd-9558-a2ed0a7ce475" name="getUloga" />
+    </flow>
+    <flow name="get:\zaposleni:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="a2c97df2-4b98-4456-b350-9cfad042368c" name="getZaposleni" />
+    </flow>
+    <flow name="post:\kupac:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="09bb35fd-32b2-47c4-852b-336f20ce8e2e" name="postKupac" />
+    </flow>
+    <flow name="post:\meni:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="9147c5da-1330-43f7-9d79-b5e0f5328116" name="postMeni" />
+    </flow>
+    <flow name="post:\placanje:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="ee517dbb-3306-4416-87dd-43bf58aa8780" name="postPlacanje" />
+    </flow>
+    <flow name="post:\porudzbina:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="2b6c7eea-6afb-46d6-82b0-92e50a1219a5" name="postPorudzbina" />
+    </flow>
+    <flow name="post:\rejting:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="96b218fb-22e0-49ff-a3c9-c82be9f43e5e" name="postRejting" />
+    </flow>
+    <flow name="post:\stavkamenija:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="0a8c9fe6-684d-445f-8943-01818f48e109" name="postStavkeMenija" />
+    </flow>
+    <flow name="post:\stavkaporudzbine:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="04eec375-9353-4ea4-9a63-6aeb41cc251c" name="postStavkePorudzbine" />
+    </flow>
+    <flow name="post:\uloga:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="0d7eb7ba-c8c0-45f3-a89c-06321c079847" name="postUloga" />
+    </flow>
+    <flow name="post:\zaposleni:application\json:restoran-api-2-config">
+        <flow-ref doc:name="Flow Reference" doc:id="a76caed9-085a-413b-89f7-33b99c14f73b" name="postZaposleni" />
+    </flow>
+	<flow name="login" doc:id="15a16fef-d040-49c3-88ff-7d0a00b7c5c2" >
+		<http:listener doc:name="Listener" doc:id="0d4fc1b4-5a2c-4a34-b4d2-5a04cbe1b087" config-ref="HTTP_Listener_config" path="/login"/>
+		<set-variable value="#[payload]" doc:name="Set Variable" doc:id="f1f25fe5-7bcc-4792-889d-333ec28a62c0" variableName="body"/>
+		<logger level="INFO" doc:name="Logger" doc:id="0973c0f8-f468-4412-bb7a-225a933bf5f7" />
+		<db:select doc:name="Select" doc:id="f77db4f6-a7e8-4de6-8d34-187cc0c00684" config-ref="Database_Config">
+			<db:sql >SELECT * FROM kupac
+WHERE usernameK=:username and passwordK=:password</db:sql>
+			<db:input-parameters ><![CDATA[#[{ 'username': payload.username, 'password': payload.password}]]]></db:input-parameters>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="5ef727c3-f406-41ca-891b-bfa4a962b137" />
+		<choice doc:name="Choice" doc:id="942acc0b-b68c-4223-977d-494c4cee07c8" >
+			<when expression="#[sizeOf(payload) == 0]">
+				<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="6e17a0bd-51e6-486c-8dcd-4eb24c5c2317" message='#["Korisnik nije pronadjen"]'>
+					<error-mapping targetType="APP:INVALID_ID" />
+				</validation:is-not-empty-collection>
+				<ee:transform doc:name="Transform Message" doc:id="347b6cab-60bc-44d1-aa00-889d04895d17" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output text/plain
+---
+"Proverite korisnicko ime i lozinku"]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="49d967e4-94a1-4bb5-a08f-cd3147164e71" />
+				<logger level="INFO" doc:name="Logger" doc:id="f2caf82f-8358-4dcb-a9db-2f72ea72b5c2" />
+				<db:insert doc:name="Insert" doc:id="6d0e61cc-c84b-436b-9238-2ec033390afe" config-ref="Database_Config">
+					<db:sql >insert into korisnik (username, password)
+values (:username, password)</db:sql>
+					<db:input-parameters ><![CDATA[#[{'username': payload.username, 'payload':vars.password}]]]></db:input-parameters>
+				</db:insert>
+				<logger level="INFO" doc:name="Logger" doc:id="c3c3615f-5c4e-4e6d-8f70-fc2dc80cfd93" />
+				<ee:transform doc:name="Transform Message" doc:id="6a867776-d369-4837-b00f-9d638a275e41">
+			<ee:message>
+				<ee:set-payload><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"status": "success",
+	"code": 200,
+	"data": {
+		Username: payload.username,
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+			</otherwise>
+		</choice>
+		<logger level="INFO" doc:name="Logger" doc:id="8c030836-c86a-44c2-b497-d5ba5f4c00c1" />
+	</flow>
+</mule>

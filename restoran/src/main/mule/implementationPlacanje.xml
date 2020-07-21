@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:validation="http://www.mulesoft.org/schema/mule/validation" xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:db="http://www.mulesoft.org/schema/mule/db"
+	xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/db http://www.mulesoft.org/schema/mule/db/current/mule-db.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/validation http://www.mulesoft.org/schema/mule/validation/current/mule-validation.xsd">
+	<flow name="getPlacanje" doc:id="98626192-5e9e-4b82-972e-e353d1f43161" >
+		<logger level="INFO" doc:name="Logger" doc:id="2362c04f-c87c-4e4c-a301-4b4222cf047d" />
+		<db:select doc:name="Select" doc:id="66f57fc6-f11b-4b10-9341-ff8f89b9da22" config-ref="Database_Config" >
+			<db:sql >select * from erp.placanje</db:sql>
+		</db:select>
+		<logger level="INFO" doc:name="Logger" doc:id="a1da5ea1-c552-438d-86e8-fc461eec2160" />
+		<ee:transform doc:name="Transform Message" doc:id="119916fe-6460-45fb-ac00-e44bee344184" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d9a088a1-ca1d-419a-a717-c2562b5bba8e" />
+	</flow>
+	<flow name="getPlacanjeById" doc:id="d6b6b525-15ef-4265-af31-3db01dce5869" >
+		<db:select doc:name="Select" doc:id="9b7c5eb4-d7e4-412a-bc9c-352c251731fe" config-ref="Database_Config" >
+			<db:sql >SELECT * FROM placanje WHERE idPlacanja = :idPlacanja</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idPlacanja': attributes.uriParams.idPlacanja}]]]></db:input-parameters>
+		</db:select>
+		<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="40238d62-7a9a-4bcb-bfbc-178349bd1440" message="#['Placanje nije pronadjeno']">
+			<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+		</validation:is-not-empty-collection>
+		<ee:transform doc:name="Transform Message" doc:id="2e394c6e-f8c9-4324-8608-3c8683e7ce93" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload ]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="d8885335-9454-4a96-a622-65f9bfd6a6f7" />
+	</flow>
+	<flow name="postPlacanje" doc:id="e288aa7a-79d4-4bef-bedb-dd80ec1e570b" >
+		<db:insert doc:name="Insert" doc:id="5c7a8ac9-c79b-4ff7-ba49-11b7c56587ab" config-ref="Database_Config" >
+			<db:sql >INSERT INTO placanje ( datumIVremeUplate, ukupnaCena, tipPlacanja, brojKartice,  datumIstekaKartice, idKupca, idPorudzbine)
+VALUES ( :datumIVremeUplate, :ukupnaCena, :tipPlacanja, :brojKartice, :datumIstekaKartice, :idKupca, :idPorudzbine)</db:sql>
+			<db:input-parameters ><![CDATA[#[{'datumIVremeUplate' : payload.datumIVremeUplate, 'ukupnaCena' : payload.ukupnaCena , 'tipPlacanja' : payload.tipPlacanja, 'brojKartice' : payload.brojKartice, 'datumIstekaKartice' : payload.datumIstekaKartice, 'idKupca' : payload.idKupca, 'idPorudzbine' : payload.idPorudzbine }]]]></db:input-parameters>
+		</db:insert>
+		<ee:transform doc:name="Transform Message" doc:id="639485cf-86cb-4966-97d1-fc2aadc808d1" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Placanje je dodato"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="deletePlacanje" doc:id="d8ed964d-7878-40bf-995f-6a1c6ecefd5c" >
+		<set-variable value="#[attributes.uriParams.idPlacanja]" doc:name="idPlacanja" doc:id="78e45b68-21c3-4e60-b868-7a19bac5e624" variableName="idPlacanja" />
+		<set-variable value="#[payload]" doc:name="body" doc:id="2a2a5b29-aea7-4675-8962-e558ae86c56f" variableName="body" />
+		<flow-ref doc:name="Flow Reference" doc:id="9064a867-905b-4095-9620-d87ec1812cdb" name="getPlacanjeById" />
+		<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="3c9972e9-4f86-458e-847b-a264152cec36" />
+		<db:delete doc:name="Delete" doc:id="0a64cea5-23d2-4e3b-aa8d-36a5e20e9f63" config-ref="Database_Config" >
+			<db:sql >DELETE FROM placanje  WHERE idPlacanja = :idPlacanja</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idPlacanja' : vars.idPlacanja}]]]></db:input-parameters>
+		</db:delete>
+		<ee:transform doc:name="Transform Message" doc:id="52f93791-691b-46ec-9d85-9f0ee16b33ad" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Placanje je uklonjeno"
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+	</flow>
+	<flow name="putPlacanje" doc:id="d8be3dee-b2b4-482c-800a-f4a66398a7a4" >
+		<set-variable value="#[payload]" doc:name="body" doc:id="d96936a4-f7b9-4653-a0de-3405b52eb38f" variableName="body" />
+		<set-variable value="#[message.attributes.uriParams.idPlacanja]" doc:name="idPlacanja" doc:id="4e3332c4-2e67-4d34-92af-232e9599cd0d" variableName="idPlacanja" />
+		<db:select doc:name="Select" doc:id="0d8fa357-4458-4ce9-b854-c59895bd0627" config-ref="Database_Config" queryTimeoutUnit="MILLISECONDS" >
+			<db:sql >SELECT * FROM placanje WHERE idPlacanja = :idPlacanja</db:sql>
+			<db:input-parameters ><![CDATA[#[{'idPlacanja': attributes.uriParams.idPlacanja}]]]></db:input-parameters>
+		</db:select>
+		<choice doc:name="Choice" doc:id="13dbb31c-f84a-49f8-b5bb-d1497d63a42e" >
+			<when expression="#[sizeOf(payload) == 0]">
+				<validation:is-not-empty-collection doc:name="Is not empty collection" doc:id="a5ad287c-e0c0-4871-9fd7-dd0ea2c948ca" message='#["Placanje sa ovim identifikacionim brojem nije pronadjeno"]'>
+					<error-mapping sourceType="VALIDATION:EMPTY_COLLECTION" targetType="APP:INVALID_ID" />
+				</validation:is-not-empty-collection>
+				<ee:transform doc:name="Transform Message" doc:id="fde9b155-9365-4a21-9985-7eb7cb7ce537" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+			</when>
+			<otherwise >
+				<set-payload value="#[vars.body]" doc:name="Set Payload" doc:id="1a24d3b6-965e-4b9c-b69c-ed17d9a2437d" />
+				<db:update doc:name="Update" doc:id="3122f287-b7e0-4268-9d0b-782ab03f647d" config-ref="Database_Config" >
+					<db:sql >UPDATE placanje
+SET datumIVremeUplate = :datumIVremeUplate, ukupnaCena = :ukupnaCena, tipPlacanja = :tipPlacanja, brojKartice = :brojKartice, datumIstekaKartice = :datumIstekaKartice, idKupca = :idKupca, idPorudzbine =:idPorudzbine
+where idKupca =:idKupca</db:sql>
+					<db:input-parameters ><![CDATA[#[{'idPlacanja' : vars.idPlacanja, 'datumIVremeUplate' : payload.datumIVremeUplate, 'ukupnaCena' : payload.ukupnaCena, 'tipPlacanja' : payload.tipPlacanja, 'brojKartice' : payload.brojKartice, 'datumIstekaKartice' : payload.datumIstekaKartice, 'idKupca' : payload.idKupca, 'idPorudzbine' : payload.idPorudzbine }]]]></db:input-parameters>
+				</db:update>
+				<ee:transform doc:name="Transform Message" doc:id="15e409d9-4cb4-4d95-8e3c-98100b862641" >
+					<ee:message >
+						<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+{
+	"message" : "Placanje je azurirano"
+}]]></ee:set-payload>
+					</ee:message>
+				</ee:transform>
+				<logger level="INFO" doc:name="Logger" doc:id="857d7ca8-e84f-4a48-9c61-400837f25b07" />
+			</otherwise>
+		</choice>
+	</flow>
+</mule>
